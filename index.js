@@ -1,15 +1,18 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
-const reposteredUrl = 'http://www.repostered.com';
+const baseUrl = 'http://www.repostered.com';
 
-axios.get('http://www.repostered.com/labels').then(res => {
+async function getSeriesUrl() {
+  const res = await axios.get(`${baseUrl}/labels`);
   const $ = cheerio.load(res.data);
   const designers = $('.designer-info');
-  console.log(designers.length);
   const randomNumber = Math.floor(Math.random() * 21);
-  const setLink = designers.eq(randomNumber).find('a').attr('href');
+  return designers.eq(randomNumber).find('a').attr('href');
+};
 
-  axios.get('http://www.repostered.com' + setLink).then(res => {
+getSeriesUrl().then(url => {
+
+  axios.get('http://www.repostered.com' + url).then(res => {
       const $$ = cheerio.load(res.data);
       const posters = $$('.poster-container');
       const posterLink = posters.eq(Math.floor(Math.random() * posters.length)).find('a').attr('href');
@@ -21,8 +24,6 @@ axios.get('http://www.repostered.com/labels').then(res => {
         console.log('http://www.repostered.com' + imageUrl);
       });
     });
-})
-.catch(err => {
-  console.log('Error encountered:');
-  console.log(error);
+
+
 });
