@@ -11,21 +11,33 @@ const getSeriesUrl = async () => {
 };
 
 const getPosterUrl = async url => {
-  const res = await axios.get(`${baseUrl}/${url}`);
+  const res = await axios.get(`${baseUrl}${url}`);
   const $ = cheerio.load(res.data);
   const posters = $('.poster-container');
   return posters.eq(Math.floor(Math.random() * posters.length)).find('a').attr('href');
 };
 
 const getPoster = async url => {
-  const res = await axios.get(`${baseUrl}/${url}`);
+  const res = await axios.get(`${baseUrl}${url}`);
   const $ = cheerio.load(res.data);
   const imageUrl = $('#posterBig').attr('src');
-  return { imageUrl, url };
+  const title = $('.page-title > a').text();
+  const designer = $('#poster-image').next().find('a').first();
+  const designerUrl = `${baseUrl}${designer.attr('href')}`;
+
+  return { 
+    title,
+    imageUrl,
+    url,
+    designer: designer.text(),
+    designerUrl
+  };
 };
+
+function sendTweet(poster) {
+  console.log(poster);
+}
 
 getSeriesUrl()
   .then(getPosterUrl)
-  .then(getPoster).then(poster => {
-      console.log(poster);
-});
+  .then(getPoster).then(sendTweet);
