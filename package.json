@@ -1,0 +1,19 @@
+{
+  "name": "repostered",
+  "version": "1.0.0",
+  "description": "Twitter bot for http://repostered.com",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joefearnley/repostered-bot.git"
+  },
+  "author": "Joe Fearnley",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joefearnley/repostered-bot/issues"
+  },
+  "homepage": "https://github.com/joefearnley/repostered-bot#readme"
+}
