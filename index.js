@@ -43,16 +43,12 @@ const getPoster = async url => {
 };
 
 const sendTweet = async poster => {
-
   // const res = await axios.get(poster.imageUrl, { responseType: 'arraybuffer' });
-  const res = await axios.get(poster.imageUrl, { responseType: 'stream' });
-
-  res.data.pipe(fs.createWriteStream('poster.jpg'));
-
-  const photo = fs.readFileSync('poster.jpg');
-
   // const photo = new Buffer(res.data, 'binary').toString('base64');
-  //const photo = base64Arraybuffer.encode(res.data);
+
+  const res = await axios.get(poster.imageUrl, { responseType: 'stream' });
+  res.data.pipe(fs.createWriteStream('poster.jpg'));
+  const photo = fs.readFileSync('poster.jpg');
 
   twitterClient.post('media/upload', { media: photo }, function(error, media, response) {
     if(error) {
@@ -63,7 +59,6 @@ const sendTweet = async poster => {
     }
 
     const tweet = `${poster.title} created by ${poster.designer} - ${poster.url}`;
-
     const status = {
       status: tweet,
       media_ids: media.media_id_string 
