@@ -1,6 +1,9 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
+const base64Arraybuffer = require('base64-arraybuffer');
+const fs = require('fs');
 const twitter = require('twitter');
+require('dotenv').config();
 const twitterClient = new twitter({
   consumer_key: process.env.TWITTER_CONSUMER_KEY,
   consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
@@ -13,7 +16,7 @@ const getSeriesUrl = async () => {
   const res = await axios.get(`${baseUrl}/labels`);
   const $ = cheerio.load(res.data);
   const designers = $('.designer-info');
-  const randomNumber = Math.floor(Math.random() * randomNumber.length);
+  const randomNumber = Math.floor(Math.random() * designers.length);
   return designers.eq(randomNumber).find('a').attr('href');
 };
 
@@ -31,27 +34,50 @@ const getPoster = async url => {
   const designer = $('#poster-image').next().find('a').first();
 
   return { 
-    title,
-    imageUrl: $('#posterBig').attr('src'),
-    url: $('.page-title > a').text(),
+    title: $('.page-title > a').text(),
+    imageUrl: `${baseUrl}${$('#posterBig').attr('src')}`,
+    url: `${baseUrl}${$('.page-title > a').text()}`,
     designer: designer.text(),
     designerUrl: `${baseUrl}${designer.attr('href')}`
   };
 };
 
-function sendTweet(poster) {
-  const tweet = {
-    status: poster.title
-  };
+const sendTweet = async poster => {
 
-  twitterClient.post('statuses/update', tweet, (error, tweet, response) => {
-      if (error) {
-        console.log('Error sending tweet');
-        console.log(error);
+  // const res = await axios.get(poster.imageUrl, { responseType: 'arraybuffer' });
+  const res = await axios.get(poster.imageUrl, { responseType: 'stream' });
+
+  res.data.pipe(fs.createWriteStream('poster.jpg'));
+
+  const photo = fs.readFileSync('poster.jpg');
+
+  // const photo = new Buffer(res.data, 'binary').toString('base64');
+  //const photo = base64Arraybuffer.encode(res.data);
+
+  twitterClient.post('media/upload', { media: photo }, function(error, media, response) {
+    if(error) {
+      console.error('Error from media/upload:');
+      console.log(response.body);
+      fs.unlinkSync('poster.jpg');
+      return;
+    }
+
+    const tweet = `${poster.title} created by ${poster.designer} - ${poster.url}`;
+
+    const status = {
+      status: tweet,
+      media_ids: media.media_id_string 
+    }
+
+    twitterClient.post('statuses/update', status, function(error, tweet, response){
+      if (!error) {
+        console.log('Tweet sent');
       }
     });
-}
+  });
+};
 
 getSeriesUrl()
   .then(getPosterUrl)
-  .then(getPoster).then(sendTweet);
+  .then(getPoster)
+  .then(sendTweet);
