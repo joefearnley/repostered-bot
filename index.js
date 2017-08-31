@@ -1,6 +1,5 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
-const base64Arraybuffer = require('base64-arraybuffer');
 const fs = require('fs');
 const twitter = require('twitter');
 require('dotenv').config();
@@ -36,7 +35,7 @@ const getPoster = async url => {
   return { 
     title: $('.page-title > a').text(),
     imageUrl: `${baseUrl}${$('#posterBig').attr('src')}`,
-    url: `${baseUrl}${$('.page-title > a').text()}`,
+    url: `${baseUrl}${url}`,
     designer: designer.text(),
     designerUrl: `${baseUrl}${designer.attr('href')}`
   };
@@ -45,29 +44,30 @@ const getPoster = async url => {
 const sendTweet = async poster => {
   // const res = await axios.get(poster.imageUrl, { responseType: 'arraybuffer' });
   // const photo = new Buffer(res.data, 'binary').toString('base64');
-
+  
   const res = await axios.get(poster.imageUrl, { responseType: 'stream' });
   res.data.pipe(fs.createWriteStream('poster.jpg'));
-  const photo = fs.readFileSync('poster.jpg');
+  // const photo = fs.readFileSync('poster.jpg',  { encoding: 'base64' });
 
-  twitterClient.post('media/upload', { media: photo }, function(error, media, response) {
-    if(error) {
-      console.error('Error from media/upload:');
-      console.log(response.body);
-      fs.unlinkSync('poster.jpg');
-      return;
-    }
-
-    const tweet = `${poster.title} created by ${poster.designer} - ${poster.url}`;
-    const status = {
-      status: tweet,
-      media_ids: media.media_id_string 
-    }
-
-    twitterClient.post('statuses/update', status, function(error, tweet, response){
-      if (!error) {
-        console.log('Tweet sent');
+  fs.readFile('poster.jpg', (err, photo) => {
+    twitterClient.post('media/upload', { media: photo }, (error, media, response) => {
+      if(error) {
+        console.error('Error from media/upload:');
+        console.log(response.body);
+        return;
       }
+
+      const tweet = `${poster.title} created by ${poster.designer} - ${poster.url}`;
+      const status = {
+        status: tweet,
+        media_ids: media.media_id_string 
+      }
+
+      twitterClient.post('statuses/update', status, function(error, tweet, response){
+        if (!error) {
+          console.log('Tweet sent');
+        }
+      });
     });
   });
 };
