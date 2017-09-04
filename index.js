@@ -47,9 +47,9 @@ const sendTweet = async poster => {
   
   const res = await axios.get(poster.imageUrl, { responseType: 'stream' });
   res.data.pipe(fs.createWriteStream('poster.jpg'));
-  // const photo = fs.readFileSync('poster.jpg',  { encoding: 'base64' });
+  const photo = fs.readFileSync('poster.jpg',  { encoding: 'base64' });
 
-  fs.readFile('poster.jpg', (err, photo) => {
+  fs.readFile('temp.jpg', (err, photo) => {
     twitterClient.post('media/upload', { media: photo }, (error, media, response) => {
       if(error) {
         console.error('Error from media/upload:');
@@ -61,7 +61,7 @@ const sendTweet = async poster => {
       const status = {
         status: tweet,
         media_ids: media.media_id_string 
-      }
+      };
 
       twitterClient.post('statuses/update', status, function(error, tweet, response){
         if (!error) {
