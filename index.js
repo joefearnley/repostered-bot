@@ -53,7 +53,7 @@ const sendTweet = async poster => {
     }
 
     const status = {
-      status: `${poster.title} created by ${poster.designer} - ${poster.url}`,
+      status: `${poster.title} by ${poster.designer} - ${poster.url}`,
       media_ids: media.media_id_string 
     };
 
